@@ -30,7 +30,7 @@
 // 取得所有法規資料
 const { data: allRegulations } = await useAsyncData('home-regulations', () => {
   return queryCollection('regulations')
-    .select('title', 'organizationName', 'path', 'stem', 'version')
+    .select('fullTitle', 'belongsTo', 'path', 'stem', 'version')
     .order('version', 'DESC') // 先按日期降序，確保下面過濾時先抓到最新的
     .all()
 })
@@ -52,7 +52,7 @@ const groupedRegulations = computed(() => {
 
     if (!groups[orgId]) {
       groups[orgId] = {
-        orgName: item.organizationName,
+        orgName: item.belongsTo,
         regulations: [] // 這裡存放該組織處理過的法規清單
       }
     }
@@ -61,7 +61,7 @@ const groupedRegulations = computed(() => {
     const exists = groups[orgId].regulations.find((r: any) => r.regId === regId)
     if (!exists) {
       groups[orgId].regulations.push({
-        title: item.title,
+        title: item.fullTitle,
         regId: regId,
         path: item.path, // 連結到最新版的路徑
         latestVersion: item.version
