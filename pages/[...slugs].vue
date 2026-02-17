@@ -1,87 +1,144 @@
 <template>
-  <div class="h-screen flex flex-col">
-    <header class="bg-gray-800 text-white p-4 shadow">
-      <NuxtLink to="/" class="hover:text-gray-300">← 返回首頁</NuxtLink>
-      <span class="mx-2">|</span>
-      <span class="font-bold">{{ page?.belongsTo }} - {{ page?.fullTitle }}</span>
-    </header>
+  <div class="container mx-auto px-4 py-6 lg:py-8">
+    
+    <!-- 1. Breadcrumb 麵包屑導航 -->
+    <nav class="text-sm mb-6 text-slate-500 dark:text-slate-400 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2">
+      <NuxtLink to="/" class="hover:text-lake-600 dark:hover:text-lake-400 transition-colors">
+        所有組織
+      </NuxtLink>
+      <span>/</span>
+      <span class="font-medium text-slate-700 dark:text-slate-300">{{ page?.belongsTo }}</span>
+      <span>/</span>
+      <span class="text-lake-600 dark:text-lake-400 font-bold truncate">{{ page?.fullTitle }}</span>
+    </nav>
 
-    <main class="flex-1 overflow-hidden">
-      <div v-if="page" class="grid grid-cols-12 h-full">
-        
-        <aside class="col-span-2 bg-gray-50 border-r p-4 overflow-y-auto">
+    <!-- 主要內容區塊 -->
+    <div v-if="page" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- 2. 左欄：法規資訊 (桌面版 Sticky, 手機版置頂) -->
+      <aside class="col-span-1 lg:col-span-3 lg:sticky lg:top-24 order-1">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
           <div class="mb-6">
-            <h3 class="text-sm uppercase text-gray-500 font-bold mb-2">法規資訊</h3>
-            <p><strong>版本：</strong> {{ page.version }}</p>
-            <p><strong>狀態：</strong> 
-              <span :class="{'text-green-600': page.isCurrent === 'true', 'text-red-600': page.isCurrent === 'false'}">
-                {{ page.isCurrent === 'true' ? '現行有效版本' : '非現行版本' }}
-              </span>
-            </p>
+            <h3 class="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-3">
+              基本資訊
+            </h3>
+            
+            <div class="space-y-3">
+              <div>
+                <span class="text-sm text-slate-500 dark:text-slate-400 block">條文日期</span>
+                <span class="font-mono font-medium text-slate-700 dark:text-slate-200">{{ page.version }}</span>
+              </div>
+              
+              <div>
+                <span class="text-sm text-slate-500 dark:text-slate-400 block mb-1">施行狀態</span>
+                <span 
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium"
+                  :class="page.isCurrent === 'true' 
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                    : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full mr-2" :class="page.isCurrent === 'true' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                  {{ page.isCurrent === 'true' ? '施行中' : '歷史版本' }}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <h3 class="text-sm uppercase text-gray-500 font-bold mb-2">歷次修訂版本</h3>
-            <ul class="space-y-1">
+          <!-- 歷史版本 (在桌面版顯示於左側，手機版可考慮摺疊或移到底部，這裡先保持顯示) -->
+          <div class="border-t border-slate-100 dark:border-slate-700 pt-4">
+            <h3 class="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-3">
+              歷次修訂
+            </h3>
+            <ul class="space-y-1 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
               <li v-for="ver in historyVersions" :key="ver.path">
                 <NuxtLink 
                   :to="ver.path" 
-                  class="block px-2 py-1 rounded text-sm"
-                  :class="route.path === ver.path ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200'"
+                  class="block px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                  :class="route.path === ver.path 
+                    ? 'bg-lake-50 dark:bg-lake-900/20 text-lake-700 dark:text-lake-300 font-medium border border-lake-100 dark:border-lake-800' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
                 >
                   {{ ver.version }}
+                  <span v-if="route.path === ver.path" class="text-xs ml-1 opacity-70">(瀏覽中)</span>
                 </NuxtLink>
               </li>
             </ul>
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        <section class="col-span-8 p-8 overflow-y-auto bg-white article-content">
-          <h1 class="text-3xl font-bold mb-6 text-center">{{ page.title }}</h1>
+      <!-- 3. 中間欄：法規內文 (佔據最大空間) -->
+      <section class="col-span-1 lg:col-span-7 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 md:p-10 shadow-sm min-h-[50vh] order-2">
+        <h1 class="text-2xl md:text-3xl font-bold mb-8 text-center text-slate-900 dark:text-white leading-tight">
+          {{ page.title || page.fullTitle }}
+        </h1>
+        
+        <ContentRenderer :value="page">
+          <!-- 自定義 P 標籤：處理條號加粗與對齊 -->
+          <template #p="{ children }">
+            <p class="mb-5 leading-8 text-lg text-justify text-slate-700 dark:text-slate-300 break-words">
+              <span v-for="(child, index) in children" :key="index">
+                <span v-if="typeof child === 'string'" v-html="formatLawText(child)"></span>
+                <span v-else>{{ child }}</span>
+              </span>
+            </p>
+          </template>
           
-          <ContentRenderer :value="page">
-             <template #p="{ children }">
-              <p class="mb-4 leading-relaxed text-lg text-justify text-gray-800 law-paragraph">
-                <span v-for="(child, index) in children" :key="index">
-                    <span v-if="typeof child === 'string'" v-html="formatLawText(child)"></span>
-                    <span v-else>{{ child }}</span>
-                 </span>
-              </p>
-            </template>
-            <template #h1> <h1 class="text-2xl font-bold my-4"> <slot /> </h1> </template>
-            <template #h2> <h2 class="text-xl font-bold my-3 border-b pb-2"> <slot /> </h2> </template>
-          </ContentRenderer>
-        </section>
+          <!-- 標題樣式優化 -->
+          <template #h1> <h1 class="text-2xl font-bold mt-10 mb-6 text-slate-900 dark:text-slate-100 flex items-center gap-2"> <span class="w-1 h-8 bg-lake-500 rounded-full"></span> <slot /> </h1> </template>
+          <template #h2> <h2 class="text-xl font-bold mt-8 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 text-slate-800 dark:text-slate-200"> <slot /> </h2> </template>
+          <template #h3> <h3 class="text-lg font-bold mt-6 mb-3 text-slate-800 dark:text-slate-300"> <slot /> </h3> </template>
+          <!-- 列表樣式 -->
+          <template #ul> <ul class="list-disc list-outside ml-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2"> <slot /> </ul> </template>
+          <template #ol> <ol class="list-decimal list-outside ml-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2"> <slot /> </ol> </template>
+        </ContentRenderer>
+      </section>
 
-        <aside class="col-span-2 bg-gray-50 border-l p-4 overflow-y-auto">
-          <h3 class="text-sm uppercase text-gray-500 font-bold mb-4">目錄</h3>
-          <nav>
-            <ul class="space-y-2 text-sm">
+      <!-- 4. 右欄：目錄 (桌面版 Sticky, 手機版隱藏) -->
+      <aside class="hidden lg:block lg:col-span-2 lg:sticky lg:top-24 order-3">
+        <div class="bg-slate-50/50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm">
+          <h3 class="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-3 pl-2">
+            章節目錄
+          </h3>
+          <nav class="max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <ul class="space-y-1 text-sm">
               <li v-for="link in page.body?.toc?.links" :key="link.id">
-                <a :href="`#${link.id}`" class="text-gray-600 hover:text-blue-600 block truncate">
+                <a 
+                  :href="`#${link.id}`" 
+                  class="block py-1.5 px-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-lake-700 dark:hover:text-lake-300 transition-colors truncate"
+                >
                   {{ link.text }}
                 </a>
-                 <ul v-if="link.children" class="pl-4 mt-1 space-y-1">
-                   <li v-for="subLink in link.children" :key="subLink.id">
-                      <a :href="`#${subLink.id}`" class="text-gray-500 hover:text-blue-600 block truncate text-xs">
-                        {{ subLink.text }}
-                      </a>
-                   </li>
+                <ul v-if="link.children" class="pl-3 mt-1 space-y-1 border-l border-slate-200 dark:border-slate-700 ml-2">
+                  <li v-for="subLink in link.children" :key="subLink.id">
+                    <a 
+                      :href="`#${subLink.id}`" 
+                      class="block py-1 px-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs text-slate-500 dark:text-slate-500 hover:text-lake-600 dark:hover:text-lake-300 truncate"
+                    >
+                      {{ subLink.text }}
+                    </a>
+                  </li>
                 </ul>
               </li>
             </ul>
           </nav>
-        </aside>
+        </div>
+      </aside>
 
-      </div>
-      <div v-else class="p-10 text-center text-gray-500">
-        載入中或找不到該法規...
-      </div>
-    </main>
+    </div>
+
+    <!-- 載入中/錯誤狀態 -->
+    <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-slate-400">
+      <div class="w-12 h-12 border-4 border-slate-200 border-t-lake-500 rounded-full animate-spin mb-4"></div>
+      <p>您可能輸入了錯誤的代碼，或是系統正在調閱法規資料...</p>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+import { computedAsync } from '@vueuse/core'
+
 const route = useRoute()
 const { path } = route
 
@@ -90,17 +147,16 @@ const { data: page } = await useAsyncData(path, () => {
   return queryCollection('regulations').path(path).first()
 })
 
-// 2. 抓取同一個法規的所有歷史版本
-// 我們需要解析路徑來知道當前是哪個組織、哪個法規
-// 假設路徑：/regulations/ntpu-su/constitution/2025-02-17
+// 2. 抓取歷史版本
 const historyVersions = computedAsync(async () => {
   if (!page.value) return []
   
-  // 取得父資料夾路徑 (即法規 ID 層級)
   const currentStem = page.value.stem
+  // 避免路徑解析錯誤，增加安全檢查
+  if (!currentStem) return []
+
   const parentPath = currentStem.substring(0, currentStem.lastIndexOf('/'))
 
-  // 查詢所有開頭路徑符合該法規 ID 的檔案
   return await queryCollection('regulations')
     .where('stem', 'LIKE', `${parentPath}%`)
     .select('version', 'path')
@@ -108,22 +164,33 @@ const historyVersions = computedAsync(async () => {
     .all()
 })
 
-// 輔助函式：簡單的前端字串取代，將 "第 x 條" 加粗
-// 注意：這只適用於純文字節點，若 Markdown 解析後結構複雜可能需要 Rehype
+// 3. 格式化法規文字 (支援 Dark Mode)
 function formatLawText(text: string) {
   const regex = /(^|\s)(第\s*[0-9０-９一二三四五六七八九十百]+\s*條)/g
-  return text.replace(regex, '$1<strong class="font-black text-black">$2</strong>')
+  // 修改為 Tailwind class，確保在亮/暗模式下都清楚可見
+  // text-slate-900 (黑) / dark:text-slate-50 (白)
+  return text.replace(regex, '$1<strong class="font-black text-slate-900 dark:text-slate-50 text-lg">$2</strong>')
 }
-
-// 需要引入 computedAsync 因為我們在 setup 裡使用了 async query 依賴 page.value
-import { computedAsync } from '@vueuse/core' 
 </script>
 
 <style scoped>
-/* 針對 Markdown 內容的額外樣式 */
-.article-content :deep(h1), 
-.article-content :deep(h2), 
-.article-content :deep(h3) {
-  scroll-margin-top: 20px; /* 錨點定位偏移 */
+/* 自定義 Scrollbar 微調 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
+
+/* 確保錨點定位時不會被 Sticky Header 擋住 */
+:deep(h1), :deep(h2), :deep(h3) {
+  scroll-margin-top: 100px;
 }
 </style>
