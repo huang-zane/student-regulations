@@ -3,7 +3,7 @@
     <header class="bg-gray-800 text-white p-4 shadow">
       <NuxtLink to="/" class="hover:text-gray-300">← 返回首頁</NuxtLink>
       <span class="mx-2">|</span>
-      <span class="font-bold">{{ page?.organizationName }} - {{ page?.title }}</span>
+      <span class="font-bold">{{ page?.belongsTo }} - {{ page?.fullTitle }}</span>
     </header>
 
     <main class="flex-1 overflow-hidden">
@@ -14,14 +14,14 @@
             <h3 class="text-sm uppercase text-gray-500 font-bold mb-2">法規資訊</h3>
             <p><strong>版本：</strong> {{ page.version }}</p>
             <p><strong>狀態：</strong> 
-              <span :class="{'text-green-600': page.status === 'effective', 'text-red-600': page.status === 'abolished'}">
-                {{ page.status === 'effective' ? '現行有效' : '非現行版本' }}
+              <span :class="{'text-green-600': page.isCurrent === 'true', 'text-red-600': page.isCurrent === 'false'}">
+                {{ page.isCurrent === 'true' ? '現行有效版本' : '非現行版本' }}
               </span>
             </p>
           </div>
 
           <div>
-            <h3 class="text-sm uppercase text-gray-500 font-bold mb-2">歷史版本</h3>
+            <h3 class="text-sm uppercase text-gray-500 font-bold mb-2">歷次修訂版本</h3>
             <ul class="space-y-1">
               <li v-for="ver in historyVersions" :key="ver.path">
                 <NuxtLink 

@@ -1,38 +1,28 @@
+// tailwind.config.ts
 import type { Config } from 'tailwindcss'
 
-export default <Partial<Config>>{
-  darkMode: 'class', // Enable dark mode with class strategy
+export default <Config>{
+  darkMode: 'class', // 重要：啟用 class 模式以手動控制亮暗
+  content: [],
   theme: {
     extend: {
       colors: {
-        // Define your warm color palette
-        primary: {
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          200: '#FED7AA',
-          300: '#FDBA74',
-          400: '#FB923C',
-          500: '#F97316',
-          600: '#EA580C',
-          700: '#C2410C',
-          800: '#9A3412',
-          900: '#7C2D12',
-          950: '#431409',
-        },
-        secondary: { // Complementary warm tones or a neutral for text
-          50: '#FDFCFB',
-          100: '#F7F6F5',
-          200: '#EAE8E5',
-          300: '#DCD9D4',
-          400: '#C1BBB4',
-          500: '#A7A097',
-          600: '#8E867C',
-          700: '#756D64',
-          800: '#5C544B',
-          900: '#443D35',
-          950: '#2C2621',
-        },
-      },
-    },
+        // 定義「湖水」色系
+        lake: {
+          50: '#f0fdfa',  // 淺水波光
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6', // 主色 (Light mode)
+          600: '#0d9488', // 深水 (Dark mode 強調色)
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
+          950: '#042f2e',
+        }
+      }
+    }
   },
+  plugins: [],
 }

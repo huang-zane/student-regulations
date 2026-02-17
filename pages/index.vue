@@ -1,20 +1,21 @@
 <template>
   <div class="container mx-auto p-8">
-    <h1 class="text-3xl font-bold mb-8 text-center">台灣學生自治法規整合平台</h1>
+    <h1 class="text-3xl font-bold mb-4 text-center">臺灣學生自治規章典藏</h1>
+    <p class="mb-8 text-center">點擊法規名稱旁的「檢視」按鈕，查看學生自治法。</p>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="(group, orgId) in groupedRegulations" :key="orgId" class="border rounded-lg shadow-md hover:shadow-lg transition bg-white overflow-hidden">
-        <div class="bg-blue-600 text-white p-4">
+      <div v-for="(group, orgId) in groupedRegulations" :key="orgId" class="border rounded-lg shadow-md hover:shadow-lg transition bg-white dark:bg-slate-900 overflow-hidden">
+        <div class="bg-lake-600 text-white p-4">
           <h2 class="text-xl font-bold">{{ group.orgName }}</h2>
         </div>
         
         <div class="p-4">
           <ul class="space-y-2">
             <li v-for="reg in group.regulations" :key="reg.stem" class="flex justify-between items-center border-b pb-1 last:border-0">
-              <span class="text-gray-700 font-medium">{{ reg.title }}</span>
+              <span class="text-gray-700 dark:text-gray-200 font-medium">{{ reg.title }}</span>
               <NuxtLink 
                 :to="reg.path"
-                class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                class="text-xs bg-lake-100 text-lake-700 dark:bg-lake-800 dark:text-lake-200 px-2 py-1 rounded hover:bg-lake-200"
               >
                 檢視
               </NuxtLink>
