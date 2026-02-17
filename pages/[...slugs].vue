@@ -9,7 +9,9 @@
       <span>/</span>
       <span class="font-medium text-slate-700 dark:text-slate-300">{{ page?.belongsTo }}</span>
       <span>/</span>
-      <span class="text-lake-600 dark:text-lake-400 font-bold truncate">{{ page?.fullTitle }}</span>
+      <span class="font-medium text-slate-700 dark:text-slate-300">{{ page?.fullTitle }}</span>
+      <span>/</span>
+      <span class="text-lake-600 dark:text-lake-400 font-bold truncate">{{ page?.version }} 版本</span>
     </nav>
 
     <!-- 主要內容區塊 -->
@@ -69,8 +71,8 @@
 
       <!-- 3. 中間欄：法規內文 (佔據最大空間) -->
       <section class="col-span-1 lg:col-span-7 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 md:p-10 shadow-sm min-h-[50vh] order-2">
-        <h1 class="text-2xl md:text-3xl font-bold mb-8 text-center text-slate-900 dark:text-white leading-tight">
-          {{ page.title || page.fullTitle }}
+        <h1 class="text-xl md:text-2xl font-bold mb-8 text-center text-slate-900 dark:text-white leading-tight">
+          {{ page.fullTitle }}
         </h1>
         
         <ContentRenderer :value="page">
