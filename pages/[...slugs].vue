@@ -28,7 +28,7 @@
             <div class="space-y-3">
               <div>
                 <span class="text-sm text-slate-500 dark:text-slate-400 block">條文日期</span>
-                <span class="font-medium text-slate-700 dark:text-slate-200">{{ toRocDate(page.version) }}</span>
+                <span class="text-slate-700 dark:text-slate-200">{{ toRocDate(page.version) }}</span>
               </div>
               
               <div>
@@ -40,8 +40,17 @@
                     : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'"
                 >
                   <span class="w-1.5 h-1.5 rounded-full mr-2" :class="page.isCurrent === 'true' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                  {{ page.isCurrent === 'true' ? '本網站已知最新版本' : '已知歷史版本' }}
+                  {{ page.isCurrent === 'true' ? '本站已知最新版' : '已知有更新版本' }}
                 </span>
+              </div>
+
+              <!-- 資料來源 -->
+              <div v-if="page.source">
+                <span class="text-sm text-slate-500 dark:text-slate-400 block mb-1">資料來源</span>
+                <span 
+                  class="text-sm text-slate-700 dark:text-slate-200 TextSource break-all"
+                  v-html="sanitizedSource"
+                ></span>
               </div>
             </div>
           </div>
@@ -71,9 +80,19 @@
 
       <!-- 3. 中間欄：法規內文 -->
       <section class="col-span-1 lg:col-span-7 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 md:p-10 shadow-sm min-h-[50vh] order-2">
-        <h1 class="text-xl md:text-2xl font-bold mb-8 text-center text-slate-900 dark:text-white leading-tight">
+        <h1 class="text-xl md:text-2xl font-bold mb-4 text-center text-slate-900 dark:text-white leading-tight">
           {{ page.fullTitle }}
         </h1>
+
+        <!-- 版本註記 -->
+        <div v-if="page.note" class="w-full flex justify-end mb-8">
+          <p class="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-700/30 px-3 py-1.5 rounded-lg inline-block border border-slate-100 dark:border-slate-700/50">
+            {{ page.note }}
+          </p>
+        </div>
+        
+        <!-- 如果沒有 note，則保持原本的 mb-8 間距 -->
+        <div v-else class="mb-8"></div>
         
         <ContentRenderer :value="page" :components="mapComponents" />
 
@@ -122,7 +141,7 @@
 
 <script setup lang="ts">
 import { computedAsync } from '@vueuse/core'
-import { h, type VNode } from 'vue' // 引入渲染函數 h 與型別
+import { h, type VNode, computed } from 'vue' // 引入 computed
 
 const route = useRoute()
 const { path } = route
@@ -146,7 +165,19 @@ const historyVersions = computedAsync(async () => {
     .all()
 })
 
-// 3. 設定頁面 Meta
+// 3. 處理資料來源的 XSS 過濾 (僅允許 <a> 標籤)
+const sanitizedSource = computed(() => {
+  const source = page.value?.source
+  if (!source) return ''
+  
+  // 使用正則表達式移除所有非 <a> 或 </a> 的標籤
+  // <(?!\/?a\b)  : 匹配開頭是 < 但後面緊接的不是 'a' 或 '/a' (加上單字邊界 \b 避免匹配到如 <article>)
+  // [^>]+>       : 匹配直到結尾 > 的其餘部分
+  // /gi          : 全域搜尋，不分大小寫
+  return source.replace(/<(?!\/?a\b)[^>]+>/gi, "")
+})
+
+// 4. 設定頁面 Meta
 useHead({
   title: () => page.value 
     ? `${page.value.fullTitle}（${toRocDate(page.value.version)}版本）` 
@@ -154,7 +185,7 @@ useHead({
 })
 
 // ==========================================
-// 4. 自定義渲染元件 (解決標題樣式與條號加粗問題)
+// 5. 自定義渲染元件 (標題樣式；條號加粗)
 // ==========================================
 
 // 定義 Regex：抓取獨立成行的「第 X 條」、「第 X 條之 Y」，並包含後方「（...）」或「【...】」的要旨
@@ -261,5 +292,12 @@ const mapComponents = {
 /* 確保錨點定位時不會被 Sticky Header 擋住 */
 :deep(h1), :deep(h2), :deep(h3) {
   scroll-margin-top: 100px;
+}
+/* 針對 v-html 輸出的連結增加樣式 */
+.TextSource > :deep(a) {
+  text-decoration: underline;
+  text-underline-offset: 4px; 
+  @apply text-lake-600;  
+  
 }
 </style>
