@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-6 lg:py-8">
     
-    <!-- 1. Breadcrumb 麵包屑導航 (僅在有資料時顯示) -->
+    <!-- 1. Breadcrumb 麵包屑導航 -->
     <nav v-if="page" class="text-sm mb-6 text-slate-500 dark:text-slate-400 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2">
       <NuxtLink to="/" class="hover:text-lake-600 dark:hover:text-lake-400 transition-colors">
         所有組織
@@ -17,7 +17,7 @@
     <!-- 主要內容區塊 -->
     <div v-if="page" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
-      <!-- 2. 左欄：法規資訊 (桌面版 Sticky, 手機版置頂) -->
+      <!-- 2. 左欄：法規資訊 -->
       <aside class="col-span-1 lg:col-span-3 lg:sticky lg:top-24 order-1">
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
           <div class="mb-6">
@@ -69,34 +69,17 @@
         </div>
       </aside>
 
-      <!-- 3. 中間欄：法規內文 (佔據最大空間) -->
+      <!-- 3. 中間欄：法規內文 -->
       <section class="col-span-1 lg:col-span-7 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 md:p-10 shadow-sm min-h-[50vh] order-2">
         <h1 class="text-xl md:text-2xl font-bold mb-8 text-center text-slate-900 dark:text-white leading-tight">
           {{ page.fullTitle }}
         </h1>
         
-        <ContentRenderer :value="page">
-          <!-- 自定義 P 標籤：處理條號加粗與對齊 -->
-          <template #p="{ children }">
-            <p class="mb-5 leading-8 text-lg text-justify text-slate-700 dark:text-slate-300 break-words">
-              <span v-for="(child, index) in children" :key="index">
-                <span v-if="typeof child === 'string'" v-html="formatLawText(child)"></span>
-                <span v-else>{{ child }}</span>
-              </span>
-            </p>
-          </template>
-          
-          <!-- 標題樣式優化 -->
-          <template #h1> <h1 class="text-2xl font-bold mt-10 mb-6 text-slate-900 dark:text-slate-100 flex items-center gap-2"> <span class="w-1 h-8 bg-lake-500 rounded-full"></span> <slot /> </h1> </template>
-          <template #h2> <h2 class="text-xl font-bold mt-8 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 text-slate-800 dark:text-slate-200"> <slot /> </h2> </template>
-          <template #h3> <h3 class="text-lg font-bold mt-6 mb-3 text-slate-800 dark:text-slate-300"> <slot /> </h3> </template>
-          <!-- 列表樣式 -->
-          <template #ul> <ul class="list-disc list-outside ml-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2"> <slot /> </ul> </template>
-          <template #ol> <ol class="list-decimal list-outside ml-6 mb-4 text-slate-700 dark:text-slate-300 space-y-2"> <slot /> </ol> </template>
-        </ContentRenderer>
+        <ContentRenderer :value="page" :components="mapComponents" />
+
       </section>
 
-      <!-- 4. 右欄：目錄 (桌面版 Sticky, 手機版隱藏) -->
+      <!-- 4. 右欄：目錄 -->
       <aside class="hidden lg:block lg:col-span-2 lg:sticky lg:top-24 order-3">
         <div class="bg-slate-50/50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm">
           <h3 class="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-3 pl-2">
@@ -129,7 +112,7 @@
 
     </div>
 
-    <!-- 查無資料/錯誤狀態 -->
+    <!-- 錯誤狀態 -->
     <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-slate-500 dark:text-slate-400">
       <h1 class="text-2xl font-bold text-rose-600 dark:text-rose-400">法規參數錯誤！</h1>
     </div>
@@ -139,6 +122,7 @@
 
 <script setup lang="ts">
 import { computedAsync } from '@vueuse/core'
+import { h, type VNode } from 'vue' // 引入渲染函數 h 與型別
 
 const route = useRoute()
 const { path } = route
@@ -152,13 +136,9 @@ const { data: page } = await useAsyncData(path, () => {
 // 2. 抓取歷史版本
 const historyVersions = computedAsync(async () => {
   if (!page.value) return []
-  
   const currentStem = page.value.stem
-  // 避免路徑解析錯誤，增加安全檢查
   if (!currentStem) return []
-
   const parentPath = currentStem.substring(0, currentStem.lastIndexOf('/'))
-
   return await queryCollection('regulations')
     .where('stem', 'LIKE', `${parentPath}%`)
     .select('version', 'path')
@@ -166,18 +146,99 @@ const historyVersions = computedAsync(async () => {
     .all()
 })
 
-// 3. 格式化法規文字
-function formatLawText(text: string) {
-  const regex = /(^|\s)(第\s*[0-9０-９一二三四五六七八九十百]+\s*條)/g
-  return text.replace(regex, '$1<strong class="font-black text-slate-900 dark:text-slate-50 text-lg">$2</strong>')
-}
-
-// 4. 設定頁面 Meta (標題)
+// 3. 設定頁面 Meta
 useHead({
   title: () => page.value 
     ? `${page.value.fullTitle}（${toRocDate(page.value.version)}版本）` 
     : '法規參數錯誤'
 })
+
+// ==========================================
+// 4. 自定義渲染元件 (解決標題樣式與條號加粗問題)
+// ==========================================
+
+// 定義 Regex：抓取行首的「第 X 條」
+const lawRegex = /(^|\s)(第\s*[0-9０-９一二三四五六七八九十百]+\s*條)/g
+
+// 定義要傳給 ContentRenderer 的元件映射表
+const mapComponents = {
+  // 覆寫 H1
+  h1: (props: any, { slots }: any) => h(
+    'h1', 
+    { 
+      ...props, 
+      class: 'text-2xl font-bold mt-10 mb-6 text-slate-900 dark:text-slate-100 flex items-center gap-2' 
+    }, 
+    [
+      h('span', { class: 'w-1 h-8 bg-lake-500 rounded-full shrink-0' }), // 湖水色裝飾條
+      slots.default?.()
+    ]
+  ),
+
+  // 覆寫 H2 (保留 props 以確保 id 錨點功能正常)
+  h2: (props: any, { slots }: any) => h(
+    'h2', 
+    { 
+      ...props, 
+      class: 'text-xl font-bold mt-8 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 text-slate-800 dark:text-slate-200' 
+    }, 
+    slots.default?.()
+  ),
+  
+  // 覆寫 H3
+  h3: (props: any, { slots }: any) => h(
+    'h3',
+    {
+      ...props,
+      class: 'text-lg font-bold mt-6 mb-3 text-slate-800 dark:text-slate-300'
+    },
+    slots.default?.()
+  ),
+
+  // 覆寫 Paragraph (P) - 處理條號加粗的核心邏輯
+  p: (props: any, { slots }: any) => {
+    // 取得 Slot 中的所有子節點
+    const children = slots.default?.()
+    
+    // 處理子節點的函數
+    const processChildren = (nodes: any[]) => {
+      if (!nodes) return []
+      return nodes.map((node) => {
+        // 情況 A: 節點本身就是字串 (Vue 有時會這樣傳)
+        if (typeof node === 'string') {
+          const newText = node.replace(lawRegex, '$1<strong class="font-black text-slate-900 dark:text-slate-50 text-lg">$2</strong>')
+          if (newText !== node) {
+            return h('span', { innerHTML: newText })
+          }
+          return node
+        }
+        
+        // 情況 B: 節點是 VNode，且 children 是字串 (最常見的情況)
+        if (node && typeof node.children === 'string') {
+          const originalText = node.children
+          const newText = originalText.replace(lawRegex, '$1<strong class="font-black text-slate-900 dark:text-slate-50 text-lg">$2</strong>')
+          
+          // 如果有變更，回傳一個新的 span 包裹 innerHTML
+          if (newText !== originalText) {
+             return h('span', { innerHTML: newText })
+          }
+        }
+        
+        // 其他情況 (例如連結、圖片)，原樣回傳
+        return node
+      })
+    }
+
+    return h(
+      'p', 
+      { 
+        ...props, 
+        class: 'mb-5 leading-8 text-lg text-justify text-slate-700 dark:text-slate-300 break-words' 
+      }, 
+      processChildren(children)
+    )
+  }
+}
 </script>
 
 <style scoped>
