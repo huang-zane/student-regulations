@@ -1,15 +1,15 @@
 <template>
   <div class="container mx-auto px-4 py-6 lg:py-8">
     
-    <!-- 1. Breadcrumb 麵包屑導航 -->
-    <nav class="text-sm mb-6 text-slate-500 dark:text-slate-400 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2">
+    <!-- 1. Breadcrumb 麵包屑導航 (僅在有資料時顯示) -->
+    <nav v-if="page" class="text-sm mb-6 text-slate-500 dark:text-slate-400 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2">
       <NuxtLink to="/" class="hover:text-lake-600 dark:hover:text-lake-400 transition-colors">
         所有組織
       </NuxtLink>
       <span>/</span>
-      <span class="font-medium text-slate-700 dark:text-slate-300">{{ page?.belongsTo }}</span>
+      <span class="font-medium text-slate-700 dark:text-slate-300">{{ page.belongsTo }}</span>
       <span>/</span>
-      <span class="font-medium text-slate-700 dark:text-slate-300">{{ page?.shortTitle }}</span>
+      <span class="font-medium text-slate-700 dark:text-slate-300">{{ page.shortTitle }}</span>
       <span>/</span>
       <span class="text-lake-600 dark:text-lake-400 font-bold truncate">{{ toRocDate(page.version) }}版本</span>
     </nav>
@@ -46,7 +46,7 @@
             </div>
           </div>
 
-          <!-- 歷史版本 (在桌面版顯示於左側，手機版可考慮摺疊或移到底部，這裡先保持顯示) -->
+          <!-- 歷史版本 -->
           <div class="border-t border-slate-100 dark:border-slate-700 pt-4">
             <h3 class="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-3">
               歷次修訂
@@ -129,10 +129,9 @@
 
     </div>
 
-    <!-- 載入中/錯誤狀態 -->
-    <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-slate-400">
-      <div class="w-12 h-12 border-4 border-slate-200 border-t-lake-500 rounded-full animate-spin mb-4"></div>
-      <p>您可能輸入了錯誤的代碼，或是系統正在調閱法規資料...</p>
+    <!-- 查無資料/錯誤狀態 -->
+    <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-slate-500 dark:text-slate-400">
+      <h1 class="text-2xl font-bold text-rose-600 dark:text-rose-400">法規參數錯誤！</h1>
     </div>
 
   </div>
@@ -143,6 +142,7 @@ import { computedAsync } from '@vueuse/core'
 
 const route = useRoute()
 const { path } = route
+const { toRocDate } = useRocDate() // 引入日期中文化+民國紀年工具
 
 // 1. 抓取當前頁面內容
 const { data: page } = await useAsyncData(path, () => {
@@ -172,7 +172,12 @@ function formatLawText(text: string) {
   return text.replace(regex, '$1<strong class="font-black text-slate-900 dark:text-slate-50 text-lg">$2</strong>')
 }
 
-const { toRocDate } = useRocDate() // 引入日期中文化+民國紀年工具
+// 4. 設定頁面 Meta (標題)
+useHead({
+  title: () => page.value 
+    ? `${page.value.fullTitle}（${toRocDate(page.value.version)}版本）` 
+    : '法規參數錯誤'
+})
 </script>
 
 <style scoped>
