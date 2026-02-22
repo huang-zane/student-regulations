@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const baseURL = '/labs/student-governance-regulations/'
+
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV === 'development' },
   modules: [
@@ -13,24 +15,22 @@ export default defineNuxtConfig({
         lang: 'zh-TW',
         'data-color-mode': '' // 用於配合 color-mode 套件
       },
-      title: '臺灣學生自治規章典藏',
+      title: '臺灣學生自治規章',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: '蒐集台灣各校學生自治組織規章，包含歷史版本。' }
+        { name: 'description', content: '蒐集臺灣各校學生自治組織規章，包含歷史版本。' }
       ],
       link: [
-        // 注意：這裡的路徑必須配合下方的 baseURL 修改
-        // 如果 baseURL 是 /student-regulations/，這裡也要加上
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/student-regulations/apple-touch-icon.png' },
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/student-regulations/favicon-32x32.png' },
-        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/student-regulations/favicon-16x16.png' },
-        { rel: 'manifest', href: '/student-regulations/site.webmanifest' },
-        { rel: 'icon', type: 'image/x-icon', href: '/student-regulations/favicon.ico' }
+        { rel: 'apple-touch-icon', sizes: '180x180', href: baseURL+'apple-touch-icon.png' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: baseURL+'favicon-32x32.png' },
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: baseURL+'favicon-16x16.png' },
+        { rel: 'manifest', href: baseURL+'site.webmanifest' },
+        { rel: 'icon', type: 'image/x-icon', href: baseURL+'favicon.ico' }
       ]
     },
-    // 用於 GitHub Pages 的 Repo 名稱，確保這裡與 GitHub Repository 名稱一致
-    baseURL: '/student-regulations/'
+    
+    baseURL: baseURL
   },
 
   // 為了靜態生成 (SSG)，啟用 SSR，這樣 nuxt generate 才能產出 HTML
